@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,Group
 from cloudinary.models import CloudinaryField
 # Create your models here.
 class BaseModel(models.Model):
@@ -10,14 +10,16 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-class Role(models.Model):
-    name = models.CharField(max_length=25)
-    def __str__(self):
-        return self.name
 
 class User(AbstractUser, BaseModel):
-    role = models.ForeignKey(Role, related_name='user',on_delete=models.CASCADE,null=True)
+    ROLE_CHOICES = (
+        ('host', 'Host Accommodation'),
+        ('admin', 'Administrators Accommodation'),
+        ('tenant', 'Tenant'),
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='tenant')
     avatar_user = CloudinaryField('image')
+
 
 class House(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -29,14 +31,16 @@ class House(models.Model):
     contact_number = models.CharField(max_length=15)
     is_verified = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Accommodation {self.id} - {self.address}"
+
 
 class PostAccommodation(BaseModel):
     accommodation = models.ForeignKey(House, on_delete=models.CASCADE, related_name='posts')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
-    image_accommodation = CloudinaryField('image')
+    image_accommodation = CloudinaryField('image',null=True)
+    image_accommodation2 = CloudinaryField('image',null=True)
+    image_accommodation3 = CloudinaryField('image',null=True)
+
 
     def __str__(self):
         return f"Post {self.id} - Accommodation {self.accommodation.id}"
