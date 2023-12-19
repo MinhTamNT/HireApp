@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'oauth2_provider',
     'cloudinary',
+    'drf_yasg',
+    'debug_toolbar',
+
 ]
 
 MIDDLEWARE = [
@@ -54,8 +57,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
-
+INTERNAL_IPS = [
+    '127.0.0.1'
+]
 ROOT_URLCONF = 'accommodation.urls'
 
 TEMPLATES = [
@@ -83,7 +89,7 @@ WSGI_APPLICATION = 'accommodation.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hireaccommodation',
+        'NAME': 'hire',
         'USER': 'root',
         'PASSWORD': '120900',
         'HOST': ''  # mặc định localhost
@@ -144,7 +150,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
-APPEND_SLASH=False
+APPEND_SLASH = False
 CKEDITOR_UPLOAD_PATH = "images/"
 MEDIA_ROOT = '%s/core/static/' % BASE_DIR
 cloudinary.config(
@@ -153,6 +159,6 @@ cloudinary.config(
     api_secret="Q0bJhJc_3Z06xk1mFMf0oDSgWxo",
     secure=True
 )
-LOGIN_URL='/admin/login/'
-client_id = 'aMKeOWwrbuCMHBsV7iRdCTKcWFKSwVFEby0BkQW3'
-client_secret = 'Kl0TbA8QHHcNxILhl9w1lZmvb49QjcfiWMutf6LiXhdx78t71mPJfjFdtHTtMUe1lwEDmes1ilkFNPH36WcJTyxQr36p3YpMVbC9dC88jdXEtLUPtyrr4vAJRbWyCQYx'
+LOGIN_URL = '/admin/login/'
+client_id = 'bXnfHRqGIX8eA3PiNoToi510Vu3uUfjSzQo36t5X'
+client_secret = 'OffrHZTYZaz6GzaJ45iY6z1oNt0dAdOY07yQtx3gSESGIfSbuTsXr0TTv92TXfJXj62NpQHsa5PwmiUjLHsMx5xusXY8jFds9wz9ogbyajwA2aifC3f2ago97H3cyBcr'

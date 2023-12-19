@@ -38,9 +38,13 @@ class PostAccommodationViewSet(viewsets.ViewSet,generics.ListAPIView,generics.Cr
     queryset = PostAccommodation.objects.all()
     serializer_class = PostAccommodationSerializers
     parser_classes = [parsers.MultiPartParser, ]
+    @action(methods=['GET'],detail=True)
+    def postDetail(self,request,pk):
+        house = self.get_object().house_set.objects.all()
+        return Response(HouseSerializres(house,many=True,context={'request':request}).data,status=status.HTTP_200_OK)
 class HouseViewSet(viewsets.ViewSet,generics.ListAPIView):
     queryset = House.objects.all()
-    serializer_class = HouseViewSet
+    serializer_class = HouseSerializres
 
 
 

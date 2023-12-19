@@ -24,7 +24,7 @@ class UserSerializers(ModelSerializer):
         user.save()
         return user
 
-class HouseViewSet(ModelSerializer):
+class HouseSerializres(ModelSerializer):
     class Meta:
         model = House
         fields = ['owner','district','city','country','latitude','longitude','contact_number','is_verified',]
