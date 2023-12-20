@@ -1,16 +1,32 @@
-from rest_framework.serializers import ModelSerializer,SerializerMethodField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from rest_framework import serializers
 from .models import *
-class UserSerializers(ModelSerializer):
-    avatar_user = SerializerMethodField(source='avatar_user')
 
-    def get_avatar_user(self, user):
-        if user.avatar_user:
+class BaseSerializer(ModelSerializer):
+    image = SerializerMethodField(source='image')
+    avatar_user = SerializerMethodField(source='avatar_user')
+    def get_image(self, accommodation):
+        if accommodation.image or accommodation.avatar_user:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(user.avatar_user.url)
-            return user.avatar_user.url  # Return the Cloudinary URL directly
+                return (
+                    request.build_absolute_uri(accommodation.image.url) if accommodation.image else None,
+                    request.build_absolute_uri(accommodation.avatar_user.url) if accommodation.avatar_user else None
+                )
+            return accommodation.image.url if accommodation.image else accommodation.avatar_user.url
+        return None
 
+    def get_avatar_user(self, accommodation):
+        # Check if the instance has the 'avatar_user' attribute
+        if accommodation.avatar_user:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(accommodation.avatar_user.url)
+            return accommodation.avatar_user.url
+        return None
+
+
+class UserSerializers(BaseSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'username', 'password', 'email', 'avatar_user']
@@ -27,16 +43,15 @@ class UserSerializers(ModelSerializer):
 class HouseSerializres(ModelSerializer):
     class Meta:
         model = House
-        fields = ['owner','district','city','country','latitude','longitude','contact_number','is_verified',]
+        fields = ['owner', 'district', 'city', 'country', 'latitude', 'longitude', 'contact_number', 'is_verified']
+
+class MediaSerializer(BaseSerializer):
+    class Meta:
+        model = Media
+        fields = ['image']
+
 class PostAccommodationSerializers(ModelSerializer):
+    media = MediaSerializer(many=True)
     class Meta:
         model = PostAccommodation
-        fields = ['id', 'accommodation', 'user', 'content', 'image_accommodation', 'image_accommodation2', 'image_accommodation3']
-
-    def validate(self, data):
-        # Validate that at least one image is provided
-        if not any(data.get(f'image_accommodation{i}') for i in range(1, 4)):
-            raise serializers.ValidationError("At least one image must be provided.")
-
-        return data
-
+        fields = ['id', 'accommodation', 'user', 'content', 'media']

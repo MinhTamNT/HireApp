@@ -162,3 +162,10 @@ cloudinary.config(
 LOGIN_URL = '/admin/login/'
 client_id = 'bXnfHRqGIX8eA3PiNoToi510Vu3uUfjSzQo36t5X'
 client_secret = 'OffrHZTYZaz6GzaJ45iY6z1oNt0dAdOY07yQtx3gSESGIfSbuTsXr0TTv92TXfJXj62NpQHsa5PwmiUjLHsMx5xusXY8jFds9wz9ogbyajwA2aifC3f2ago97H3cyBcr'
+import mimetypes
+
+mimetypes.add_type("application/javascript", ".js", True)
+
+DEBUG_TOOLBAR_CONFIG = {
+    "INTERCEPT_REDIRECTS": False,
+}

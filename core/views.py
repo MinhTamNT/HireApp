@@ -42,6 +42,26 @@ class PostAccommodationViewSet(viewsets.ViewSet,generics.ListAPIView,generics.Cr
     def postDetail(self,request,pk):
         house = self.get_object().house_set.objects.all()
         return Response(HouseSerializres(house,many=True,context={'request':request}).data,status=status.HTTP_200_OK)
+    def MediaDetail(self,request,pk):
+        media = self.get_object().media_set.objects.all()
+        return Response(MediaSerializer(media,many=True,context={'request':request}).data,status=status.HTTP_200_OK)
+    @action(methods=['put,patch'],detail=True)
+    def update_post(self, request, pk):
+        post = self.get_object()
+        data = request.data.copy()
+        data.pop('media', None)  # Exclude media from the data to avoid errors in the serializer
+
+        serializer = PostAccommodationSerializers(post, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            media_files = request.data.getlist('media')
+            if media_files:
+                post.media_set.set(media_files)
+
+            return Response(PostAccommodationSerializers(post, context={'request': request}).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class HouseViewSet(viewsets.ViewSet,generics.ListAPIView):
     queryset = House.objects.all()
     serializer_class = HouseSerializres
