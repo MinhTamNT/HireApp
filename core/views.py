@@ -1,10 +1,31 @@
 from django.http import HttpResponse
 from rest_framework import viewsets,generics,permissions,parsers
-from .models import User,PostAccommodation
+from .models import *
+from rest_framework.views import APIView
 from .serializers import *
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action,authentication_classes, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+import cloudinary.uploader
+import cloudinary
+@authentication_classes([OAuth2Authentication])
+@permission_classes([IsAuthenticated])
+class MyProtectedView(APIView):
+    def get(self, request):
+        user = request.user
+
+        # Assign roles and permissions to the user based on your logic
+        user_roles = user.roles.all()
+        user_permissions = Permission.objects.filter(roles__in=user_roles).distinct()
+
+        return Response({
+            'user_id': user.id,
+            'username': user.username,
+            'roles': [role.name for role in user_roles],
+            'permissions': [permission.codename for permission in user_permissions],
+        }, status=status.HTTP_200_OK)
 class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
@@ -34,37 +55,28 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView
 
         serialized_user = UserSerializers(user, context={'request': request}).data
         return Response(serialized_user)
-class PostAccommodationViewSet(viewsets.ViewSet,generics.ListAPIView,generics.CreateAPIView,generics.RetrieveAPIView):
+
+
+
+class PostAccommodationViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.RetrieveAPIView):
     queryset = PostAccommodation.objects.all()
     serializer_class = PostAccommodationSerializers
     parser_classes = [parsers.MultiPartParser, ]
-    @action(methods=['GET'],detail=True)
-    def postDetail(self,request,pk):
-        house = self.get_object().house_set.objects.all()
-        return Response(HouseSerializres(house,many=True,context={'request':request}).data,status=status.HTTP_200_OK)
-    def MediaDetail(self,request,pk):
-        media = self.get_object().media_set.objects.all()
-        return Response(MediaSerializer(media,many=True,context={'request':request}).data,status=status.HTTP_200_OK)
-    @action(methods=['put,patch'],detail=True)
-    def update_post(self, request, pk):
-        post = self.get_object()
-        data = request.data.copy()
-        data.pop('media', None)  # Exclude media from the data to avoid errors in the serializer
+    @action(methods=['GET'], detail=True)
+    def postDetail(self, request, pk):
+        house = self.get_object().accommodation
+        return Response(Accommodation(house, many=True, context={'request': request}).data, status=status.HTTP_200_OK)
 
-        serializer = PostAccommodationSerializers(post, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
 
-            media_files = request.data.getlist('media')
-            if media_files:
-                post.media_set.set(media_files)
+class MediaViewSet(viewsets.ViewSet,generics.ListAPIView):
+    queryset = Media.objects.all()
+    serializer_class = MediaSerializer
 
-            return Response(PostAccommodationSerializers(post, context={'request': request}).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class AccommodationViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Accommodation.objects.all()
+    serializer_class = AccommodationSerializers
 
-class HouseViewSet(viewsets.ViewSet,generics.ListAPIView):
-    queryset = House.objects.all()
-    serializer_class = HouseSerializres
+
 
 
 

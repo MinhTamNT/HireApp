@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
-
 class BaseModel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -9,18 +8,16 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-
+class Role(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+class Permission(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    roles = models.ManyToManyField(Role)
 class User(AbstractUser, BaseModel):
-    ROLE_CHOICES = [
-        ('host', 'Host Accommodation'),
-        ('admin', 'Administrators Accommodation'),
-        ('tenant', 'Tenant'),
-    ]
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='tenant')
-    avatar_user = CloudinaryField('image')
-    follow = models.ManyToManyField("Follow", related_name="follow")
+    avatar_user = CloudinaryField("avatar_user")
+    follow = models.ManyToManyField("Follow", related_name='followers')
 
-class House(models.Model):
+class Accommodation(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     district = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
@@ -34,32 +31,41 @@ class House(models.Model):
         return self.district
 
 class PostAccommodation(BaseModel):
-    accommodation = models.ForeignKey(House, on_delete=models.CASCADE, related_name='posts')
+    accommodation = models.ForeignKey(Accommodation, on_delete=models.CASCADE, related_name='posts')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
-    media = models.ManyToManyField('Media', related_name='media')
+
 
     def __str__(self):
         return f"Post {self.id} - Accommodation {self.accommodation.id}"
 
+
 class Media(models.Model):
+    name = models.CharField(max_length=255,null=True)
     image = CloudinaryField("image")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    postID = models.ForeignKey(PostAccommodation,on_delete=models.CASCADE,related_name='post',null=True)
+
+    def __str__(self):
+        return self.name or "No Name"
+
 
 class Comment(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    house = models.ForeignKey(House, on_delete=models.CASCADE, related_name='comments')
+    house = models.ForeignKey(Accommodation, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Follow(models.Model):
-    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
-    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following_set', related_query_name='following')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers_set', related_query_name='followers')
 
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
+
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
