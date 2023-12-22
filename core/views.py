@@ -57,6 +57,8 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView
         except Exception as e:
             return Response({"detail": f"Error creating user: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        @action(methods=['PUT'],detail=False,url_path='update')
+        def update_user
 
 class PostAccommodationViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.RetrieveAPIView):
     queryset = PostAccommodation.objects.all()
