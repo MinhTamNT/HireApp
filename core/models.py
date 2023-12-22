@@ -9,13 +9,24 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 class Role(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-class Permission(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    roles = models.ManyToManyField(Role)
+    ADMIN = 1
+    HOST = 2
+    TENANT = 3
+    ROLE_CHOICES = (
+        (TENANT, 'TENANT'),
+        (HOST, 'HOST'),
+        (ADMIN, 'admin'),
+    )
+
+    id = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, primary_key=True)
+
+    def __str__(self):
+        return self.get_id_display()
 class User(AbstractUser, BaseModel):
+    roles = models.ManyToManyField(Role,name='roles',related_name='role')
     avatar_user = CloudinaryField("avatar_user")
     follow = models.ManyToManyField("Follow", related_name='followers')
+
 
 class Accommodation(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -45,7 +56,7 @@ class Media(models.Model):
     image = CloudinaryField("image")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    postID = models.ForeignKey(PostAccommodation,on_delete=models.CASCADE,related_name='post',null=True)
+    post_accomodation = models.ForeignKey(PostAccommodation, on_delete=models.CASCADE, related_name='post', null=True)
 
     def __str__(self):
         return self.name or "No Name"
@@ -55,7 +66,6 @@ class Comment(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     house = models.ForeignKey(Accommodation, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
-
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Follow(models.Model):

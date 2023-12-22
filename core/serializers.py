@@ -16,7 +16,6 @@ class UserSerializers(ModelSerializer):
     avatar_user = SerializerMethodField(source='avatar_user')
 
     def get_avatar_user(self, accommodation):
-        # Check if the instance has the 'avatar_user' attribute
         if accommodation.avatar_user:
             request = self.context.get('request')
             if request:
@@ -25,7 +24,7 @@ class UserSerializers(ModelSerializer):
         return None
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'email', 'avatar_user']
+        fields = ['id', 'first_name', 'last_name', 'username', 'password', 'email', 'avatar_user','roles']
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -45,7 +44,7 @@ class AccommodationSerializers(ModelSerializer):
 class MediaSerializer(BaseSerializer):
     class Meta:
         model = Media
-        fields = ['image','postID']
+        fields = ['image','post_accomodation']
 
 class PostAccommodationSerializers(ModelSerializer):
     accommodation = AccommodationSerializers(read_only=True)
