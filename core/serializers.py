@@ -1,6 +1,8 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from rest_framework import serializers
 from .models import *
+import cloudinary
+from cloudinary.utils import cloudinary_url
 class BaseSerializer(ModelSerializer):
     image = SerializerMethodField(source='image')
     def get_image(self, accommodation):
@@ -13,14 +15,14 @@ class BaseSerializer(ModelSerializer):
             return accommodation.image.url
         return None
 class UserSerializers(ModelSerializer):
-    avatar_user = SerializerMethodField(source='avatar_user')
+    avatar_user = serializers.SerializerMethodField(source='avatar_user')
 
-    def get_avatar_user(self, accommodation):
-        if accommodation.avatar_user:
+    def get_avatar_user(self, user):
+        if user.avatar_user:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(accommodation.avatar_user.url)
-            return accommodation.avatar_user.url
+                return request.build_absolute_uri(cloudinary_url(user.avatar_user)[0])
+            return cloudinary_url(user.avatar_user)[0]
         return None
     class Meta:
         model = User

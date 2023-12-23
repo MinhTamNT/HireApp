@@ -1,13 +1,9 @@
-from django.http import HttpResponse
 from rest_framework import viewsets,generics,permissions,parsers
 from .models import *
-from rest_framework.views import APIView
 from .serializers import *
 from rest_framework import status
 from rest_framework.decorators import action,authentication_classes, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 import cloudinary.uploader
 import cloudinary
 
@@ -43,22 +39,49 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView
 
                 if user is not None:
                     user.roles.set(roles)
-
-
                 serializer = UserSerializers(user, context={'request': request})
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response({"detail": "Roles and avatar_user are required for registration."},
                                 status=status.HTTP_400_BAD_REQUEST)
-
         except Role.DoesNotExist:
             return Response({"detail": "Invalid role ID."},
                             status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": f"Error creating user: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        @action(methods=['PUT'],detail=False,url_path='update')
-        def update_user
+
+    @action(methods=['PUT'], detail=True, url_path='update')
+    def updated_user(self, request, pk):
+        try:
+            user = self.get_object()
+
+            if user != request.user:
+                return Response({"detail": "You don't have permission to update this user."},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            for field, value in request.data.items():
+                setattr(user, field, value)
+
+            # Handle avatar update
+            avatar_file = request.data.get('avatar_user')
+            if avatar_file:
+                cloudinary_response = cloudinary.uploader.upload(avatar_file)
+                avatar_public_id = cloudinary_response.get('public_id')
+                user.avatar_user = avatar_public_id
+
+            user.save()
+
+            # You may want to serialize and return the updated user
+            serializer = UserSerializers(user, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": f"Error updating user: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PostAccommodationViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.RetrieveAPIView):
     queryset = PostAccommodation.objects.all()
